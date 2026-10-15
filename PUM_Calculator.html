@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a1611">
+<title>PUM Calculator — Cambridge Percentage Uniform Mark</title>
+<style>
+  :root{
+    --bg:#1a1611; --card:#2a2419; --card2:#3a3222;
+    --accent:#d4af37; --accent2:#c9a227;
+    --good:#b8a06a; --warn:#e8c547; --bad:#c05c5c;
+    --text:#ece5d3; --muted:#a89f8a; --line:#4a4232;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(160deg,#1a1611 0%,#2a2419 100%);
+    color:var(--text); min-height:100vh; padding:16px;
+  }
+  .wrap{max-width:480px;margin:0 auto;}
+  header{text-align:center;margin-bottom:18px;}
+  header h1{font-size:1.35rem;margin:0 0 4px;letter-spacing:.5px;}
+  header h1 span{color:var(--accent);}
+  header p{margin:0;font-size:.8rem;color:var(--muted);}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:16px;margin-bottom:14px;box-shadow:0 8px 24px rgba(0,0,0,.35);
+  }
+  .card h2{font-size:.95rem;margin:0 0 12px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;}
+  label{display:block;font-size:.8rem;color:var(--muted);margin:10px 0 4px;}
+  input,select{
+    width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);
+    background:var(--card2);color:var(--text);font-size:1rem;outline:none;
+    transition:border-color .15s;
+  }
+  input:focus,select:focus{border-color:var(--accent);}
+  .row{display:flex;gap:10px;}
+  .row > div{flex:1;}
+  .hint{font-size:.72rem;color:var(--muted);margin-top:4px;line-height:1.4;}
+  .btn{
+    width:100%;padding:14px;border:none;border-radius:12px;font-size:1.05rem;font-weight:700;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));color:#1a1611;
+    cursor:pointer;margin-top:16px;letter-spacing:.5px;
+  }
+  .btn:active{transform:scale(.98);}
+  .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .res-box{
+    background:var(--card2);border:1px solid var(--line);border-radius:12px;
+    padding:12px;text-align:center;
+  }
+  .res-box .lbl{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+  .res-box .val{font-size:1.5rem;font-weight:800;margin-top:4px;}
+  .res-box.wide{grid-column:1 / -1;}
+  .grade-badge{
+    display:inline-block;padding:6px 22px;border-radius:999px;font-size:1.6rem;font-weight:900;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));color:#1a1611;
+  }
+  .bar-wrap{margin-top:10px;background:#0f172a;border-radius:8px;height:10px;overflow:hidden;}
+  .bar{height:100%;width:0%;border-radius:8px;background:linear-gradient(90deg,var(--accent),var(--warn));transition:width .6s ease;}
+  .dist{font-size:.85rem;line-height:1.5;color:var(--text);}
+  .dist b{color:var(--warn);}
+  .error{color:var(--bad);font-size:.8rem;margin-top:8px;display:none;}
+  .scale{display:flex;gap:4px;margin-top:10px;}
+  .scale div{flex:1;text-align:center;font-size:.62rem;padding:5px 0;border-radius:6px;color:#1a1611;font-weight:700;}
+  details{margin-top:12px;font-size:.78rem;color:var(--muted);}
+  summary{cursor:pointer;color:var(--accent);font-weight:600;}
+  .formula{
+    background:#1a1611;border-radius:10px;padding:10px;margin-top:8px;
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.75rem;line-height:1.6;color:#d4af37;
+    overflow-x:auto;white-space:nowrap;
+  }
+
+  .subj-row{
+    background:var(--card2);border:1px solid var(--line);border-radius:12px;
+    padding:12px;margin-bottom:10px;
+  }
+  .subj-row .subj-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .subj-row .subj-name{font-weight:700;font-size:.9rem;color:var(--accent);}
+  .subj-row .del-btn{
+    background:none;border:none;color:var(--bad);font-size:1.1rem;cursor:pointer;padding:2px 8px;
+  }
+  .subj-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .subj-grid label{font-size:.68rem;margin:4px 0 2px;}
+  .subj-grid input,.subj-grid select{padding:9px 10px;font-size:.9rem;border-radius:8px;}
+  .add-btn{
+    width:100%;padding:11px;border:1px dashed var(--line);border-radius:10px;
+    background:transparent;color:var(--accent);font-size:.9rem;font-weight:600;cursor:pointer;margin-top:4px;
+  }
+  .overall-box{
+    background:var(--card2);border:1px solid var(--accent);border-radius:12px;
+    padding:14px;text-align:center;margin-top:12px;
+  }
+  .overall-box .big{font-size:2rem;font-weight:900;color:var(--accent);}
+  .subj-result{font-size:.72rem;color:var(--muted);margin-top:6px;line-height:1.5;text-align:left;}
+  .subj-result b{color:var(--text);}
+
+  input:disabled, select:disabled{
+    opacity:.4;cursor:not-allowed;
+  }
+  .lock-note{font-size:.68rem;color:var(--warn);margin-top:3px;display:none;}
+  footer{text-align:center;font-size:.68rem;color:var(--muted);margin-top:18px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>📊 PUM <span>Calculator</span></h1>
+    <p>Cambridge Percentage Uniform Mark estimator</p>
+  </header>
+
+  <!-- INPUT CARD -->
+  <div class="card">
+    <h2>Enter Details</h2>
+
+    <label for="grade">Grade of the lower threshold</label>
+    <select id="grade">
+      <option value="" disabled selected>Select grade first…</option>
+      <option value="A*">A*</option>
+      <option value="A">A</option>
+      <option value="B">B</option>
+      <option value="C">C</option>
+      <option value="D">D</option>
+      <option value="E">E</option>
+      <option value="F">F (IGCSE)</option>
+      <option value="G">G (IGCSE)</option>
+    </select>
+
+    <label for="total">Total marks for the syllabus</label>
+    <input type="number" id="total" placeholder="e.g. 300" min="1" inputmode="decimal" disabled>
+    <div class="lock-note" id="noteTotal">Select a grade first</div>
+
+    <div class="row">
+      <div>
+        <label for="lo">Lower threshold (raw)</label>
+        <input type="number" id="lo" placeholder="e.g. 184" min="0" inputmode="decimal" disabled>
+        <div class="lock-note" id="noteLo">Select a grade first</div>
+      </div>
+      <div>
+        <label for="hi">Higher threshold (raw)</label>
+        <input type="number" id="hi" placeholder="e.g. 213" min="0" inputmode="decimal" disabled>
+        <div class="lock-note" id="noteHi">Select a grade first</div>
+      </div>
+    </div>
+
+    <label for="marks">Your marks (between thresholds)</label>
+    <input type="number" id="marks" placeholder="e.g. 191" min="0" inputmode="decimal" disabled>
+    <div class="lock-note" id="noteMarks">Enter total &amp; thresholds first</div>
+
+    <div class="error" id="err"></div>
+    <button class="btn" id="calcBtn">Calculate PUM</button>
+
+    <details>
+      <summary>How is PUM calculated?</summary>
+      <div class="formula" id="formulaBox"></div>
+      <p style="margin:8px 0 0;">PUM maps your raw mark onto a fixed 0–100 scale per grade band: A* = 90–100, A = 80–89, B = 70–79, etc. It is <b>not</b> the same as your raw percentage.</p>
+    </details>
+  </div>
+
+  <!-- RESULT CARD -->
+  <div class="card" id="resultCard" style="display:none;">
+    <h2>Results</h2>
+
+    <div class="result-grid">
+      <div class="res-box wide">
+        <div class="lbl">Grade</div>
+        <div style="margin-top:6px;"><span class="grade-badge" id="rGrade">—</span></div>
+      </div>
+      <div class="res-box">
+        <div class="lbl">PUM</div>
+        <div class="val" id="rPum" style="color:var(--accent);">—</div>
+      </div>
+      <div class="res-box">
+        <div class="lbl">Raw %</div>
+        <div class="val" id="rRaw" style="color:var(--muted);">—</div>
+      </div>
+      <div class="res-box wide" id="distBox">
+        <div class="lbl" style="text-align:left;">How far from a better grade</div>
+        <div class="dist" id="rDist" style="text-align:left;margin-top:6px;"></div>
+        <div class="bar-wrap"><div class="bar" id="rBar"></div></div>
+      </div>
+    </div>
+
+    <div class="scale" id="scaleBar"></div>
+  </div>
+
+
+  <!-- MULTI-SUBJECT CARD -->
+  <div class="card">
+    <h2>Multiple Subjects — Overall</h2>
+    <p style="font-size:.75rem;color:var(--muted);margin:0 0 12px;line-height:1.4;">
+      Add each subject with its own total, thresholds and your marks. The overall PUM is the simple average of all subject PUMs (how Cambridge averages uniform marks across subjects).
+    </p>
+    <div id="subjList"></div>
+    <button class="add-btn" id="addSubj">+ Add Subject</button>
+    <button class="btn" id="calcOverall">Calculate Overall</button>
+    <div class="error" id="errMulti"></div>
+    <div id="overallResult" style="display:none;">
+      <div class="overall-box">
+        <div class="lbl" style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Overall Average PUM</div>
+        <div class="big" id="ovPum">—</div>
+        <div style="margin-top:6px;"><span class="grade-badge" id="ovGrade" style="font-size:1.2rem;padding:4px 16px;">—</span></div>
+        <div class="subj-result" id="ovDetail"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Estimate only — official PUMs are issued by Cambridge on your Statement of Results.<br>
+    PUM is reported at syllabus level only, never per component.
+  </footer>
+</div>
+
+<script>
+(function(){
+  var GRADE_BASE = {"A*":90,"A":80,"B":70,"C":60,"D":50,"E":40,"F":30,"G":20};
+  var GRADE_ORDER = ["G","F","E","D","C","B","A","A*"];
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  function fmt(n, dp){
+    dp = dp === undefined ? 1 : dp;
+    return n.toFixed(dp).replace(/\.0+$/, dp === 1 ? '.0' : '');
+  }
+
+  function showError(msg){
+    var e = $('err');
+    if(msg){ e.textContent = msg; e.style.display = 'block'; }
+    else { e.style.display = 'none'; }
+  }
+
+  function calcPUM(marks, lo, hi, grade){
+    var base = GRADE_BASE[grade];
+    var span;
+    if(grade === "A*"){
+      // A* band spans 90-100 (11 uniform marks)
+      span = (marks - lo) / (hi - lo) * 11 + base;
+    } else {
+      span = (marks - lo) / (hi - lo) * 10 + base;
+    }
+    return Math.max(0, Math.min(100, span));
+  }
+
+  function gradeFromPUM(pum, hasAstar){
+    if(pum >= 90) return hasAstar ? "A*" : "A";
+    if(pum >= 80) return "A";
+    if(pum >= 70) return "B";
+    if(pum >= 60) return "C";
+    if(pum >= 50) return "D";
+    if(pum >= 40) return "E";
+    if(pum >= 30) return "F";
+    if(pum >= 20) return "G";
+    return "U";
+  }
+
+  function render(){
+    showError('');
+    var total = parseFloat($('total').value);
+    var lo    = parseFloat($('lo').value);
+    var hi    = parseFloat($('hi').value);
+    var grade = $('grade').value;
+    var marks = parseFloat($('marks').value);
+
+    if(!grade){ showError('Please select a grade first.'); return; }
+    if(isNaN(total) || total <= 0){ showError('Please enter a valid total marks.'); return; }
+    if(isNaN(lo) || isNaN(hi)){ showError('Please enter both thresholds.'); return; }
+    if(grade === 'A*'){
+      // hi auto-syncs to total
+      hi = total;
+      $('hi').value = total;
+    } else if(hi <= lo){ showError('Higher threshold must be greater than lower threshold.'); return; }
+    if(isNaN(marks)){ showError('Please enter your marks.'); return; }
+    if(marks < lo || marks > hi){
+      showError('⚠️ Your marks (' + marks + ') are outside the threshold boundaries. Please change your marks to be between ' + lo + ' and ' + hi + '.');
+      $('marks').focus();
+      return;
+    }
+
+    var pum = calcPUM(marks, lo, hi, grade);
+    var rawPct = (marks / total) * 100;
+    var awarded = gradeFromPUM(pum, true);
+
+    // Display
+    $('rGrade').textContent = awarded;
+    $('rPum').textContent = pum.toFixed(1) + '%';
+    $('rRaw').textContent = rawPct.toFixed(1) + '%';
+
+    // Distance to better grade
+    var distBox = $('distBox');
+    if(awarded === "A*"){
+      distBox.style.display = 'none';
+    } else {
+      distBox.style.display = 'block';
+      var nextIdx = GRADE_ORDER.indexOf(awarded === "A" ? "A" : awarded) + 1;
+      var nextGrade = GRADE_ORDER[nextIdx]; // grade above current
+      var nextThreshold = (nextGrade === "A*") ? hi : hi; // upper bound of current band = lower bound of next
+      // marks needed to reach the next band = hi (the upper threshold of current grade)
+      var marksNeeded = hi - marks;
+      var uniformNeeded = (nextGrade === "A*") ? (90 - pum) : (Math.ceil(pum / 10) * 10 - pum);
+      // More precise: uniform marks to next boundary
+      var nextBoundaryUniform = (nextGrade === "A*") ? 90 : GRADE_BASE[nextGrade];
+      uniformNeeded = Math.max(0, nextBoundaryUniform - pum);
+
+      var pctOfBand = ((marks - lo) / (hi - lo)) * 100;
+      var html = '';
+      if(marksNeeded <= 0){
+        html = 'You are already at the <b>top</b> of this grade band — effectively at the next grade boundary.';
+      } else {
+        html = 'You need <b>' + fmt(marksNeeded,1) + ' more raw mark' + (marksNeeded === 1 ? '' : 's') +
+               '</b> (out of ' + total + ') to reach grade <b>' + nextGrade + '</b> — that is ' +
+               '<b>' + uniformNeeded.toFixed(1) + ' uniform marks</b> away. ' +
+               'You are ' + pctOfBand.toFixed(0) + '% of the way through the ' + awarded + ' band.';
+      }
+      $('rDist').innerHTML = html;
+      $('rBar').style.width = Math.min(100, pctOfBand) + '%';
+    }
+
+    // Scale bar
+    var bands = [
+      ["A*",90,"#d4af37"],["A",80,"#c9a227"],["B",70,"#b8942a"],
+      ["C",60,"#a68b3c"],["D",50,"#8f7a45"],["E",40,"#7a6a4e"],
+      ["F",30,"#665c56"],["G",20,"#524e4a"]
+    ];
+    var sb = $('scaleBar');
+    sb.innerHTML = '';
+    bands.forEach(function(b){
+      var d = document.createElement('div');
+      d.textContent = b[0] + ' ' + b[1] + '+';
+      d.style.background = b[2];
+      if(awarded === b[0]){ d.style.outline = '2px solid #fff'; }
+      sb.appendChild(d);
+    });
+
+    // Formula display
+    var base = GRADE_BASE[grade];
+    var f = grade === "A*"
+      ? 'PUM = (marks − ' + lo + ') / (' + hi + ' − ' + lo + ') × 11 + 90'
+      : 'PUM = (marks − ' + lo + ') / (' + hi + ' − ' + lo + ') × 10 + ' + base;
+    $('formulaBox').textContent = f + '\nRaw % = marks / ' + total + ' × 100';
+
+    $('resultCard').style.display = 'block';
+    $('resultCard').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+
+  // ===== MULTI-SUBJECT =====
+  var subjCount = 0;
+  var GRADE_BASE_M = {"A*":90,"A":80,"B":70,"C":60,"D":50,"E":40,"F":30,"G":20};
+
+  function addSubject(){
+    subjCount++;
+    var div = document.createElement('div');
+    div.className = 'subj-row';
+    div.id = 'subj' + subjCount;
+    div.innerHTML =
+      '<div class="subj-head">' +
+        '<input type="text" placeholder="Subject name" class="s-name" style="flex:1;margin-right:8px;padding:8px 10px;font-size:.9rem;border-radius:8px;">' +
+        '<button class="del-btn" onclick="this.parentNode.parentNode.remove()">✕</button>' +
+      '</div>' +
+      '<div class="subj-grid">' +
+        '<div style="grid-column:1/-1;"><label>Grade of lower threshold</label>' +
+          '<select class="s-grade">' +
+            '<option value="" disabled selected>Select grade first…</option>' +
+            '<option value="A*">A*</option><option value="A">A</option><option value="B">B</option>' +
+            '<option value="C">C</option><option value="D">D</option><option value="E">E</option>' +
+            '<option value="F">F (IGCSE)</option><option value="G">G (IGCSE)</option>' +
+          '</select>' +
+        '</div>' +
+        '<div><label>Total marks</label><input type="number" class="s-total" placeholder="e.g. 300" min="1" inputmode="decimal" disabled></div>' +
+        '<div><label>Lower threshold</label><input type="number" class="s-lo" placeholder="e.g. 184" min="0" inputmode="decimal" disabled></div>' +
+        '<div><label>Higher threshold</label><input type="number" class="s-hi" placeholder="e.g. 213" min="0" inputmode="decimal" disabled></div>' +
+        '<div><label>Your marks</label><input type="number" class="s-marks" placeholder="e.g. 191" min="0" inputmode="decimal" disabled></div>' +
+      '</div>' +
+      '<div class="lock-note s-locknote">Select a grade to unlock fields</div>';
+    $('subjList').appendChild(div);
+    attachSubjLocking(div);
+  }
+
+  function attachSubjLocking(row){
+    var gradeSel = row.querySelector('.s-grade');
+    var totalIn  = row.querySelector('.s-total');
+    var loIn     = row.querySelector('.s-lo');
+    var hiIn     = row.querySelector('.s-hi');
+    var marksIn  = row.querySelector('.s-marks');
+    var note     = row.querySelector('.s-locknote');
+
+    gradeSel.addEventListener('change', function(){
+      var has = !!this.value;
+      [totalIn, loIn, hiIn].forEach(function(el){ el.disabled = !has; });
+      note.style.display = has ? 'none' : 'block';
+      if(has) totalIn.focus();
+      marksIn.disabled = true;
+      marksIn.value = '';
+    });
+
+    function maybeUnlock(){
+      var g = gradeSel.value;
+      var t = parseFloat(totalIn.value);
+      var l = parseFloat(loIn.value);
+      var h = parseFloat(hiIn.value);
+      var ready = false;
+      if(g === 'A*'){ ready = !isNaN(t) && t > 0 && !isNaN(l); }
+      else { ready = !isNaN(t) && t > 0 && !isNaN(l) && !isNaN(h) && h > l; }
+      marksIn.disabled = !ready;
+      if(!ready) marksIn.value = '';
+    }
+
+    totalIn.addEventListener('input', function(){
+      if(gradeSel.value === 'A*'){
+        hiIn.value = this.value;
+        hiIn.disabled = true;
+      }
+      maybeUnlock();
+    });
+    loIn.addEventListener('input', maybeUnlock);
+    hiIn.addEventListener('input', maybeUnlock);
+
+  }
+
+  $('addSubj').addEventListener('click', addSubject);
+  addSubject(); // start with one row
+
+  function calcPUMm(marks, lo, hi, grade){
+    var base = GRADE_BASE_M[grade];
+    var span = (grade === "A*")
+      ? (marks - lo) / (hi - lo) * 11 + base
+      : (marks - lo) / (hi - lo) * 10 + base;
+    return Math.max(0, Math.min(100, span));
+  }
+
+  function gradeFromPUMm(pum){
+    if(pum >= 90) return "A*";
+    if(pum >= 80) return "A";
+    if(pum >= 70) return "B";
+    if(pum >= 60) return "C";
+    if(pum >= 50) return "D";
+    if(pum >= 40) return "E";
+    if(pum >= 30) return "F";
+    if(pum >= 20) return "G";
+    return "U";
+  }
+
+  $('calcOverall').addEventListener('click', function(){
+    var err = $('errMulti');
+    err.style.display = 'none';
+    var rows = document.querySelectorAll('.subj-row');
+    if(rows.length === 0){ err.textContent = 'Add at least one subject.'; err.style.display='block'; return; }
+
+    var totalPum = 0, count = 0, details = [];
+    var errors = [];
+
+    rows.forEach(function(row, i){
+      var name = row.querySelector('.s-name').value.trim() || ('Subject ' + (i+1));
+      var total = parseFloat(row.querySelector('.s-total').value);
+      var marks = parseFloat(row.querySelector('.s-marks').value);
+      var lo = parseFloat(row.querySelector('.s-lo').value);
+      var hi = parseFloat(row.querySelector('.s-hi').value);
+      var grade = row.querySelector('.s-grade').value;
+
+      if(!grade){ errors.push(name + ': select a grade'); return; }
+      if(isNaN(total) || total <= 0){ errors.push(name + ': invalid total marks'); return; }
+      if(grade === 'A*'){ hi = total; row.querySelector('.s-hi').value = total; }
+      else if(isNaN(lo) || isNaN(hi) || hi <= lo){ errors.push(name + ': thresholds invalid'); return; }
+      if(isNaN(marks)){ errors.push(name + ': enter your marks'); return; }
+      if(marks < lo || marks > hi){ errors.push(name + ': marks ' + marks + ' are outside thresholds — please change to be between ' + lo + ' and ' + hi); return; }
+
+      var pum = calcPUMm(marks, lo, hi, grade);
+      var g = gradeFromPUMm(pum);
+      totalPum += pum; count++;
+      details.push('<b>' + name + '</b>: ' + pum.toFixed(1) + '% (' + g + ')');
+    });
+
+    if(errors.length > 0){
+      err.innerHTML = errors.join('<br>');
+      err.style.display = 'block';
+      return;
+    }
+    if(count === 0) return;
+
+    var avg = totalPum / count;
+    $('ovPum').textContent = avg.toFixed(1) + '%';
+    $('ovGrade').textContent = gradeFromPUMm(avg);
+    $('ovDetail').innerHTML = details.join('<br>') +
+      '<br><span style="color:var(--muted);">Average of ' + count + ' subject' + (count > 1 ? 's' : '') + '</span>';
+    $('overallResult').style.display = 'block';
+    $('overallResult').scrollIntoView({behavior:'smooth', block:'start'});
+  });
+
+
+  // ===== SINGLE-SUBJECT LOCKING =====
+  function toggleNote(id, show){
+    $(id).style.display = show ? 'block' : 'none';
+  }
+
+  $('grade').addEventListener('change', function(){
+    var g = this.value;
+    var hasGrade = !!g;
+    ['total','lo','hi'].forEach(function(id){
+      $(id).disabled = !hasGrade;
+      toggleNote('note' + id.charAt(0).toUpperCase() + id.slice(1), !hasGrade);
+    });
+    if(hasGrade){
+      $('total').focus();
+      // reset marks lock state
+      $('marks').disabled = true;
+      toggleNote('noteMarks', true);
+    }
+  });
+
+  function maybeUnlockMarks(){
+    var g = $('grade').value;
+    var t = parseFloat($('total').value);
+    var l = parseFloat($('lo').value);
+    var h = parseFloat($('hi').value);
+    var ready = false;
+    if(g === 'A*'){
+      ready = !isNaN(t) && t > 0 && !isNaN(l);
+    } else {
+      ready = !isNaN(t) && t > 0 && !isNaN(l) && !isNaN(h) && h > l;
+    }
+    $('marks').disabled = !ready;
+    toggleNote('noteMarks', !ready);
+    if(!ready) $('marks').value = '';
+  }
+
+  // A*: total auto-fills hi
+  $('total').addEventListener('input', function(){
+    if($('grade').value === 'A*'){
+      $('hi').value = this.value;
+      $('hi').disabled = true;
+      toggleNote('noteHi', false);
+    }
+    maybeUnlockMarks();
+  });
+  $('lo').addEventListener('input', maybeUnlockMarks);
+  $('hi').addEventListener('input', maybeUnlockMarks);
+
+  $('calcBtn').addEventListener('click', calc);
+  function calc(){ render(); }
+
+  // Allow Enter key on inputs
+  ['total','lo','hi','marks'].forEach(function(id){
+    $(id).addEventListener('keydown', function(e){ if(e.key === 'Enter') calc(); });
+  });
+})();
+</script>
+</body>
+</html>
